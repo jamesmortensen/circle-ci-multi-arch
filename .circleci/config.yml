@@ -93,6 +93,7 @@ jobs:
       - run:
           name: Push Multi-Arch Image
           command: |
+            docker login -u $DOCKER_LOGIN -p $DOCKER_TOKEN
             docker buildx build --platform linux/amd64,linux/arm64 -t jamesmortensen1/hello-world --push .
 
 workflows:
