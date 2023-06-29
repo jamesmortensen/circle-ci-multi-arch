@@ -14,8 +14,7 @@ jobs:
     executor: arm64-executor
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.13
+
       - run:
           name: Install Docker Compose
           command: |
@@ -35,8 +34,7 @@ jobs:
     executor: amd64-executor
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.13
+
       - run:
           name: Install Docker Compose
           command: |
@@ -60,8 +58,6 @@ jobs:
       VCS_TYPE: github
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.13
 
       - run:
           name: Download artifacts
