@@ -54,12 +54,20 @@ jobs:
 
   push-multi-arch:
     executor: amd64-executor
+    environment:
+      ORG: jamesmortensen
+      REPO: circle-ci-multi-arch
+      VCS_TYPE: github
     steps:
       - checkout
       - setup_remote_docker:
           version: 19.03.13
-      - retrieve_artifacts:
-          path: docker-artifacts
+
+      - run:
+          name: Download artifacts
+          command: |
+            curl -H "Circle-Token: $CIRCLE_TOKEN" https://circleci.com/api/v1.1/project/$VCS_TYPE/$ORG/$REPO/latest/artifacts
+
       - run:
           name: Install Docker Buildx
           command: |
