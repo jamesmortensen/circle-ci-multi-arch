@@ -1,0 +1,87 @@
+version: 2.1
+executors:
+  arm64-executor:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm-medium
+  amd64-executor:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: medium
+
+jobs:
+  build-arm64:
+    executor: arm64-executor
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+      - run:
+          name: Install Docker Compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Build Docker Image (ARM64)
+          command: |
+            docker build -t hello-world-arm64 .
+            docker save hello-world-arm64 | gzip > hello-world-arm64.tar.gz
+
+      - store_artifacts:
+          path: hello-world-arm64.tar.gz
+          destination: docker-artifacts-arm64
+
+  build-amd64:
+    executor: amd64-executor
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+      - run:
+          name: Install Docker Compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Build Docker Image (AMD64)
+          command: |
+            docker build -t hello-world-amd64 .
+            docker save hello-world-amd64 | gzip > hello-world-amd64.tar.gz
+
+      - store_artifacts:
+          path: hello-world-amd64.tar.gz
+          destination: docker-artifacts-amd64
+
+  push-multi-arch:
+    executor: amd64-executor
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+      - retrieve_artifacts:
+          path: docker-artifacts
+      - run:
+          name: Install Docker Buildx
+          command: |
+            docker buildx create --use
+      - run:
+          name: Load ARM64 Image
+          command: |
+            docker load < docker-artifacts/hello-world-arm64.tar.gz
+            docker load < docker-artifacts/hello-world-amd64.tar.gz
+      - run:
+          name: Push Multi-Arch Image
+          command: |
+            docker buildx build --platform linux/amd64,linux/arm64 -t jamesmortensen1/hello-world --push .
+
+workflows:
+  version: 2
+  build-workflow:
+    jobs:
+      - build-arm64
+      - build-amd64
+      - push-multi-arch:
+          requires:
+            - build-arm64
+            - build-amd64
+
