@@ -65,6 +65,8 @@ jobs:
             sh get-workflow.js
             ARM64_JOBID=$(node get-job-id.js build-arm64 | tail -n1 | awk '{print $3}')
             AMD64_JOBID=$(node get-job-id.js build-amd64 | tail -n1 | awk '{print $3}')
+            echo 'export ARM64_JOBID='$ARM64_JOBID >> $BASH_ENV
+            echo 'export AMD64_JOBID='$AMD64_JOBID >> $BASH_ENV
 
       - run:
           name: Download artifacts
