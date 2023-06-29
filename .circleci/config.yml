@@ -60,9 +60,24 @@ jobs:
       - checkout
 
       - run:
+          name: Get job ids for required jobs
+          command: |
+            sh get-workflow.js
+            ARM64_JOBID=$(node get-job-id.js build-arm64 | tail -n1 | awk '{print $3}')
+            AMD64_JOBID=$(node get-job-id.js build-amd64 | tail -n1 | awk '{print $3}')
+
+      - run:
           name: Download artifacts
           command: |
-            curl -H "Circle-Token: $CIRCLE_TOKEN" https://circleci.com/api/v1.1/project/$VCS_TYPE/$ORG/$REPO/latest/artifacts
+            #curl -H "Circle-Token: $CIRCLE_TOKEN" https://circleci.com/api/v1.1/project/$VCS_TYPE/$ORG/$REPO/latest/artifacts
+            curl --request GET \
+              --url https://circleci.com/api/v2/project/gh/$ORG/$REPO/$ARM64_JOBID/artifacts \
+              --header "Circle-Token: $CIRCLE_TOKEN" > artifact-arm64.json
+            curl --request GET \
+              --url https://circleci.com/api/v2/project/gh/$ORG/$REPO/$AMD64_JOBID/artifacts \
+              --header "Circle-Token: $CIRCLE_TOKEN" > artifact-amd64.json
+            curl -L $(node get-artifact-url.js artifact-arm64.json | tail -n1) --output docker-artifacts-arm64.tar.gz
+            curl -L $(node get-artifact-url.js artifact-amd64.json | tail -n1) --output docker-artifacts-amd64.tar.gz
 
       - run:
           name: Install Docker Buildx
@@ -71,8 +86,8 @@ jobs:
       - run:
           name: Load ARM64 Image
           command: |
-            docker load < docker-artifacts/hello-world-arm64.tar.gz
-            docker load < docker-artifacts/hello-world-amd64.tar.gz
+            docker load < docker-artifacts-arm64.tar.gz
+            docker load < docker-artifacts-amd64.tar.gz
       - run:
           name: Push Multi-Arch Image
           command: |
