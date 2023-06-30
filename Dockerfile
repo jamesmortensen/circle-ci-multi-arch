@@ -1,5 +1,7 @@
 FROM jamesmortensen1/base:latest
 
+USER root
+
 RUN apt-get -qqy update \
   && apt-get -qqy --no-install-recommends install \
     libfontconfig \
@@ -14,3 +16,5 @@ RUN apt-get -qqy update \
     fonts-noto-color-emoji \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qyy clean
+
+USER seluser
