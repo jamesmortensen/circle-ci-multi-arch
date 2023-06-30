@@ -1,4 +1,4 @@
-FROM hello-world:latest
+FROM jamesmortensen1/base:latest
 
 RUN apt-get -qqy update \
   && apt-get -qqy --no-install-recommends install \
@@ -14,4 +14,3 @@ RUN apt-get -qqy update \
     fonts-noto-color-emoji \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qyy clean
-  
